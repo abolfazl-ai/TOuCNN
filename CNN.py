@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class TopOptCNN(nn.Module):
-    def __init__(self, materials_n):
+    def __init__(self):
         super().__init__()
         # Encoder
         self.e1 = EncoderBlock(1, 64)
@@ -18,28 +18,28 @@ class TopOptCNN(nn.Module):
         self.d3 = DecoderBlock(256, 128)
         self.d4 = DecoderBlock(128, 64)
         # Classifier
-        self.c = nn.Conv2d(64, materials_n, kernel_size=3,
+        self.c = nn.Conv2d(64, 1, kernel_size=3,
                            padding='same', padding_mode='reflect')
-        self.outputs = nn.Softmax(1)
+        self.output = nn.Sigmoid()
 
     def forward(self, inputs):
         inputs_pad, padding = pad_input(inputs)
         # Encoder
-        s1, p1 = self.e1(inputs_pad)
-        s2, p2 = self.e2(p1)
-        s3, p3 = self.e3(p2)
-        s4, p4 = self.e4(p3)
+        s1, x = self.e1(inputs_pad)
+        s2, x = self.e2(x)
+        s3, x = self.e3(x)
+        s4, x = self.e4(x)
         # Bottleneck
-        b = self.b(p4)
+        x = self.b(x)
         # Decoder
-        d1 = self.d1(b, s4)
-        d2 = self.d2(d1, s3)
-        d3 = self.d3(d2, s2)
-        d4 = self.d4(d3, s1)
+        x = self.d1(x, s4)
+        x = self.d2(x, s3)
+        x = self.d3(x, s2)
+        x = self.d4(x, s1)
         # Classifier
-        c = self.c(d4)
-        outputs = remove_padding(self.outputs(c), padding)
-        return outputs
+        x = self.c(x)
+        output = remove_padding(self.output(x), padding)
+        return output
 
 
 class ConvBlock(nn.Module):

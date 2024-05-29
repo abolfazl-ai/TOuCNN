@@ -5,17 +5,11 @@ from matplotlib.lines import Line2D
 
 class Plotter:
 
-    def __init__(self, x, materials):
+    def __init__(self, x):
         plt.ion()
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
-        D, N, C = materials['D'], materials['name'], materials['color']
 
-        cmap = 'Greys' if len(N) == 2 else mc.LinearSegmentedColormap.from_list('mesh', list(zip(D, C)))
-        self.im = self.ax.imshow(x, origin='lower', cmap=cmap, vmin=0, vmax=1, interpolation='nearest')
-
-        custom_lines = [Line2D([0], [0], marker='o', label='Scatter',
-                               lw=0, markerfacecolor=c, markersize=10) for c in C]
-        self.ax.legend(custom_lines, N, loc='upper center', ncol=len(C), bbox_to_anchor=(0.5, 0))
+        self.im = self.ax.imshow(x, origin='lower', cmap='Greys', vmin=0, vmax=1, interpolation='nearest')
 
         self.fig.canvas.manager.set_window_title('Optimization result')
         self.ax.title.set_text('Initializing')
@@ -36,15 +30,14 @@ class Plotter:
         self.fig.canvas.flush_events()
         if not interactive: plt.show(block=True)
 
-    def show_plots(self, history):
+    @staticmethod
+    def show_plots(history):
         fig, ax = plt.subplots(1, 2, figsize=(12, 6))
         fig.canvas.manager.set_window_title('Convergence history')
-        ax[0].plot(history['Objective'], label='Objective')
+        ax[0].plot(history['Objective'] / max(history['Objective']), label='Objective')
         ax[0].title.set_text('Objective')
         ax[1].plot(history['Volume'], label='Volume')
-        ax[1].plot(history['Mass'], label='Mass')
-        ax[1].plot(history['Cost'], label='Cost')
-        ax[1].plot(history['GreyElements'], label='Grey Elements')
+        ax[1].plot(history['Convergence'], label='Convergence Criteria')
         ax[1].title.set_text('Constraints')
         plt.ylim(0, 1)
         ax[1].legend()

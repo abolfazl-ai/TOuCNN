@@ -1,31 +1,32 @@
 from utils import optimize
 from CNNOptimizer import CNNOptimizer
+from OCOptimizer import OCOptimizer
 from examples import get_example_bc
 
-bc, frozen, MF, sym = get_example_bc(2)
-
-materials = {'name': ['Void', 'A', 'B', 'C'],  # Display name of material
-             'color': ['w', 'b', 'r', 'k'],  # Display color of material
-             'D': [0, 0.4, 0.7, 1],  # Normalized material density
-             'E': [0, 0.2, 0.6, 1],  # Normalized material elastic modulus
-             'C': [0, 0.5, 0.8, 1]}  # Normalized material cost
-
-# Uncomment for single material
-materials = {'name': ['Void', 'C'], 'color': ['w', 'k'], 'D': [0, 1], 'E': [0, 1], 'C': [0, 1]}
+bc, frozen, cons, sym = get_example_bc(1)
 
 cnn_opts = {
     'use_gpu': True,
-    'mesh_size': (150, 75),  # (nx, ny)
+    'mesh_size': (128, 64),  # (nx, ny)
+    'volume_fraction': cons,
     'symmetry_axis': sym,  # Possible modes: None, 'X', 'Y'
-    'main_constraint': 'M',  # V: Volume fraction, M: Mass fraction
-    'main_factor': MF,
-    'cost_factor': 0.50,
-    'penalty': 1.0, 'gamma': 1.0075,  # Continuation scheme
-    'alpha': 1.0, 'alpha_increase': 0.50,  # Main constraint penalty
-    'beta': 1.0, 'beta_increase': 0.25,  # Cost constraint penalty
-    'learning_rate': 1E-4,
-    'min_it': 100, 'max_it': 500, 'converge_criteria': 0.005  # Convergence options
+    'penalty': 3.0, 'penalty_increase': 0.05,  # Continuation scheme
+    'alpha': 0.0, 'alpha_increase': 1.0,  # Main constraint penalty
+    'learning_rate': 5E-4, 'gamma': 0.95, 'step': 5,
+    'min_it': 10, 'max_it': 500, 'converge_criteria': 0.02  # Convergence options
 }
 
-opt = CNNOptimizer(bc, materials, frozen, cnn_opts)
-optimize(opt, materials)
+opt = CNNOptimizer(bc, frozen, cnn_opts)
+optimize(opt)
+
+oc_opts = {
+    'mesh_size': (128, 64),  # (nx, ny)
+    'volume_fraction': cons,
+    'symmetry_axis': sym,  # Possible modes: None, 'X', 'Y'
+    'penalty': 3.0, 'penalty_increase': 0.025,  # Continuation scheme
+    'move': 0.2, 'filter_radius': 3,
+    'min_it': 10, 'max_it': 500, 'converge_criteria': 0.001  # Convergence options
+}
+
+opt = OCOptimizer(bc, frozen, oc_opts)
+optimize(opt)

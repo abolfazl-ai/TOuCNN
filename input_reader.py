@@ -3,11 +3,11 @@ from numpy import nan
 from cvxopt import matrix
 
 
-def get_inputs(opts, bc, preserved, materials):
+def get_inputs(opts, bc, preserved):
     bc, shape, factor, axis = apply_symmetry(opts['symmetry_axis'], bc, opts['mesh_size'])
     mesh = generate_mesh(*shape)
     bc = get_bc(mesh, bc)
-    frozen = get_frozen(mesh, preserved, materials)
+    frozen = get_frozen(mesh, preserved)
     return mesh, bc, frozen, {'factor': factor, 'axis': axis}
 
 
@@ -30,16 +30,14 @@ def generate_mesh(nx, ny):
             'indexes': (indexes[:, 0], indexes[:, 1]), 'c_mat': c_mat}
 
 
-def get_frozen(mesh, preserved_regions, materials):
-    shape = (1, len(materials['name']), *mesh['shape'])
-    frozen, frozen_mask = np.zeros(shape), np.zeros(shape, dtype=bool)
+def get_frozen(mesh, preserved_regions):
+    frozen, frozen_mask = np.zeros(mesh['shape']), np.zeros(mesh['shape'], dtype=bool)
     for row in preserved_regions:
         start, end, name = [row[key] for key in ('S', 'E', 'Material')]
         nr = [(int(max(min(np.floor(s * n), np.floor(e * n) - 1), 0)), int(np.floor(e * n)) + 1) for n, s, e
               in list(zip(mesh['shape'], *[(p[1], p[0], *p[2:]) for p in (start, end)]))]
-        material_index = np.argwhere(np.array(materials['name']) == name).flatten()[0]
-        frozen_mask[0][material_index][nr[0][0]:nr[0][1], nr[1][0]:nr[1][1]] = True
-        frozen[0][material_index][nr[0][0]:nr[0][1], nr[1][0]:nr[1][1]] = 1
+        frozen_mask[nr[0][0]:nr[0][1], nr[1][0]:nr[1][1]] = True
+        frozen[nr[0][0]:nr[0][1], nr[1][0]:nr[1][1]] = 1 if name.upper() == 'SOLID' else 0
     return frozen, frozen_mask
 
 
