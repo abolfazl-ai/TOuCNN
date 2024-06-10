@@ -1,13 +1,11 @@
-import time
-
 import torch
 import numpy as np
 from FEM import FEM
 
 
 class Loss(torch.autograd.Function):
-    # Late init parameters
-    p = alpha = None
+    # Class-level attributes for storing various parameters and intermediate results
+    p = alpha = 0
     VolumeFraction = cnt = N = 0
     x = network_input = Je = None
     mesh = fem = shape = frozen_mask = frozen = None
@@ -19,22 +17,22 @@ class Loss(torch.autograd.Function):
         Loss.N = mesh['elem_num']
         Loss.mesh, Loss.shape = mesh, mesh['shape']
         Loss.fem = FEM(mesh, bc)
-        Loss.p, Loss.alpha = opts['penalty'], opts['alpha']
+        Loss.p, Loss.alpha = opts['penalty'], opts['alpha_increase']
         Loss.VolumeFraction = opts['volume_fraction']
 
+        # Initializing the network input using uniform material distribution
         _, j = Loss.fem.solve(np.ones(Loss.N))
         Loss.init_objective = j.sum()
-        network_input = j.clip(np.nanpercentile(j, 2), np.nanpercentile(j, 98))
+        network_input = j.clip(np.nanpercentile(j, 2), np.nanpercentile(j, 98))  # Deleting outliers
         Loss.network_input = torch.tensor(network_input).float()[None, None, :, :].to(device)
 
     @staticmethod
     def forward(ctx, x):
         ctx.save_for_backward(x)
-        s = time.time()
-        Loss.x = x[0][0].cpu().detach().numpy()
-        print(time.time() - s)
+        Loss.x = x[0][0].detach().cpu().numpy()
+
+        # Applying non-design regions constraint
         Loss.x[Loss.frozen_mask] = Loss.frozen[Loss.frozen_mask]
-        Loss.volume = Loss.x.mean()
 
         # Objective
         e = (Loss.x ** Loss.p)
@@ -42,7 +40,8 @@ class Loss(torch.autograd.Function):
         Loss.J = (e * Loss.Je).sum()
 
         # Constraint
-        Loss.cnt = Loss.volume - Loss.VolumeFraction
+        Loss.volume = Loss.x.mean()
+        Loss.cnt = max(0, Loss.volume - Loss.VolumeFraction)
 
         return torch.tensor(Loss.J / Loss.init_objective + Loss.alpha * Loss.cnt ** 2)
 

@@ -2,11 +2,6 @@ import numpy as np
 from numpy import nan
 from cvxopt import matrix
 
-"""
-Utility functions for meshing the model, applying symmetry condition and
-extracting boundary conditions and frozen regions from user inputs.
-"""
-
 
 def get_inputs(symmetry, mesh_size, bc, frozen):
     bc, shape, factor, axis = apply_symmetry(symmetry, bc, mesh_size)
@@ -31,8 +26,8 @@ def generate_mesh(nx, ny):
     iK, jK = c_mat[:, sI].T, c_mat[:, sII].T
     indexes = np.sort(np.hstack((iK.reshape((-1, 1), order='F'), jK.reshape((-1, 1), order='F'))))[:, [1, 0]]
 
-    return {'dim': dim, 'shape': shape, 'dof': dof, 'node_numbers': node_numbers,
-            'elem_num': elem_num, 'indexes': (indexes[:, 0], indexes[:, 1]), 'c_mat': c_mat}
+    return {'dim': dim, 'shape': shape, 'dof': dof, 'node_numbers': node_numbers, 'elem_num': elem_num,
+            'indexes': (indexes[:, 0], indexes[:, 1]), 'c_mat': c_mat}
 
 
 def get_frozen(mesh, preserved_regions):

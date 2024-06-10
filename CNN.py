@@ -22,6 +22,8 @@ class TopOptCNN(nn.Module):
                            padding='same', padding_mode='reflect')
         self.output = nn.Sigmoid()
 
+        self._initialize_weights()
+
     def forward(self, inputs):
         inputs_pad, padding = pad_input(inputs)
         # Encoder
@@ -41,6 +43,13 @@ class TopOptCNN(nn.Module):
         output = remove_padding(self.output(x), padding)
         return output
 
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+
 
 class ConvBlock(nn.Module):
     def __init__(self, in_c, out_c):
@@ -52,7 +61,6 @@ class ConvBlock(nn.Module):
                                padding='same', padding_mode='reflect')
         self.bn2 = nn.BatchNorm2d(out_c)
         self.relu = nn.ReLU()
-        self._initialize_weights()
 
     def forward(self, inputs):
         x = self.conv1(inputs)
@@ -62,13 +70,6 @@ class ConvBlock(nn.Module):
         x = self.bn2(x)
         x = self.relu(x)
         return x
-
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0.0)
 
 
 class EncoderBlock(nn.Module):
@@ -102,7 +103,6 @@ def pad_input(tensor, divisor=16):
     _, _, h, w = tensor.size()
     pad_h = 0 if h % divisor == 0 else divisor - (h % divisor)
     pad_w = 0 if w % divisor == 0 else divisor - (w % divisor)
-    # pad (left, right, top, bottom)
     padding = (pad_w // 2, int(pad_w // 2 + pad_w % 2), pad_h // 2, int(pad_h / 2 + pad_h % 2))
     padded_tensor = nn.functional.pad(tensor, padding, mode='reflect')
 
