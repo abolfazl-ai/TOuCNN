@@ -5,4 +5,4 @@ The TOuCNN optimizer runs by providing 3 inputs:
 - Non-design regions
 - Optimizer options
 
-For more details, see [ValidationExamples](https://github.com/abolfazl-ai/TOuCNN/blob/main/ValidationExamples.ipynb) or [ConstraintsExamples](https://github.com/abolfazl-ai/TOuCNN/blob/main/ConstraintExamples.ipynb)
+For more details, see [ValidationExamples](https://github.com/abolfazl-ai/TOuCNN/blob/main/ValidationExamples.ipynb) or [ConstraintExamples](https://github.com/abolfazl-ai/TOuCNN/blob/main/ConstraintExamples.ipynb)
