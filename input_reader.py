@@ -59,7 +59,7 @@ def get_bc(mesh, bc):
             if callable(force):
                 for node in nodes:
                     coordinates = np.flip(np.argwhere(mesh['node_numbers'] == node)[0] / mesh['shape'])
-                    force_vector[(mesh['dim'] * nodes + dim).tolist(), 0] = force(*coordinates)[dim]
+                    force_vector[(mesh['dim'] * node + dim).tolist(), 0] = force(*coordinates)[dim]
             fixed.extend([] if np.isnan(displacement[dim]) else (mesh['dim'] * nodes + dim).tolist())
     free = np.setdiff1d(np.arange(0, dof), fixed).tolist()
     return {'free_dofs': free, 'fix_dofs': fixed, 'force_vector': force_vector}
