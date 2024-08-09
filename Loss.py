@@ -21,9 +21,9 @@ class Loss(torch.autograd.Function):
         Loss.VolumeFraction = opts['volume_fraction']
 
         # Initializing the network input using uniform material distribution
-        _, j = Loss.fem.solve(np.ones(Loss.N))
-        Loss.init_objective = j.sum()
-        network_input = j.clip(np.nanpercentile(j, 2), np.nanpercentile(j, 98))  # Deleting outliers
+        _, je = Loss.fem.solve(np.ones(Loss.N))
+        Loss.init_objective = je.sum()
+        network_input = je.clip(np.nanpercentile(je, 2), np.nanpercentile(je, 98))  # Deleting outliers
         Loss.network_input = torch.tensor(network_input).float()[None, None, :, :].to(device)
 
     @staticmethod

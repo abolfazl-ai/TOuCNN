@@ -23,13 +23,14 @@ class CNNOptimizer:
 
     def __init__(self, bc, frozen, opts):
         set_seed(1234)
-        self.history = {'Loss': [], 'Objective': [], 'Volume': [], 'Gray': [], 'Penalty': [], 'Alpha': []}
+        self.history = {'Loss': [], 'Objective': [], 'Volume': [],
+                        'Gray': [], 'Penalty': [], 'Alpha': []}
 
         # Initialize the design variable and options
         self.x, self.opts = np.zeros(np.flip(opts['mesh_size'])), opts
 
         # Get the mesh, boundary conditions, frozen nodes, and symmetry settings
-        mesh, bc, frozen, self.sym = get_inputs(opts['symmetry_axis'], opts['mesh_size'], bc, frozen)
+        mesh, bc, frozen, self.sym = get_inputs(opts, bc, frozen)
 
         # Initialize the loss function with provided parameters
         device = 'cuda' if (torch.cuda.is_available() and opts['use_gpu']) else 'cpu'
@@ -68,7 +69,7 @@ class CNNOptimizer:
 
             # Record the loss and other metrics
             self.history['Loss'].append(loss.item())
-            self.history['Objective'].append(self.sym['factor'] * Loss.J)
+            self.history['Objective'].append(self.sym['multiplier'] * Loss.J)
             self.history['Volume'].append(Loss.volume)
             self.history['Gray'].append(grey)
             self.history['Penalty'].append(Loss.p)
